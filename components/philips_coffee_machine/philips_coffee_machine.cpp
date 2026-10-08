@@ -189,8 +189,7 @@ namespace esphome
         {
             ESP_LOGCONFIG(TAG, "Philips Coffee Machine");
             ESP_LOGCONFIG(TAG, "  Bridge stats: %s", YESNO(bridge_stats_));
-            display_uart_.check_uart_settings(115200, 1, uart::UART_CONFIG_PARITY_NONE, 8);
-            mainboard_uart_.check_uart_settings(115200, 1, uart::UART_CONFIG_PARITY_NONE, 8);
+            // The UART settings are checked when the configuration is validated (FINAL_VALIDATE_SCHEMA)
         }
 
     } // namespace philips_coffee_machine
