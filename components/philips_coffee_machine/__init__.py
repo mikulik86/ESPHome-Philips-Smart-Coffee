@@ -14,6 +14,7 @@ INVERT_POWER_PIN = "invert_power_pin"
 POWER_TRIP_DELAY = "power_trip_delay"
 CONF_POWER_MESSAGE_REPETITIONS = "power_message_repetitions"
 CONF_BRIDGE_STATS = "bridge_stats"
+CONF_LOW_LATENCY_RX = "low_latency_rx"
 
 CONF_COMMAND_SET = "model"
 COMMAND_SETS = {
@@ -58,6 +59,7 @@ CONFIG_SCHEMA = cv.Schema(
         ),
         cv.Optional(CONF_LANGUAGE, default="en-US"): cv.enum(LANGUAGES, space="-"),
         cv.Optional(CONF_BRIDGE_STATS, default=False): cv.boolean,
+        cv.Optional(CONF_LOW_LATENCY_RX, default=True): cv.boolean,
     }
 ).extend(cv.COMPONENT_SCHEMA)
 
@@ -96,3 +98,4 @@ def to_code(config):
     cg.add(var.set_invert_power_pin(config[INVERT_POWER_PIN]))
     cg.add(var.set_power_trip_delay(config[POWER_TRIP_DELAY]))
     cg.add(var.set_bridge_stats(config[CONF_BRIDGE_STATS]))
+    cg.add(var.set_low_latency_rx(config[CONF_LOW_LATENCY_RX]))

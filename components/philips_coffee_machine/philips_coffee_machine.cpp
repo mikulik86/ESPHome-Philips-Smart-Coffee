@@ -18,6 +18,16 @@ namespace esphome
             power_pin_->setup();
             power_pin_->pin_mode(gpio::FLAG_OUTPUT);
             power_pin_->digital_write(initial_pin_state_);
+
+            // By default the ESP32 uart driver holds received bytes until a whole message has arrived
+            // (rx full threshold or rx timeout), which delays every message by its own length on each hop.
+            // The display reacts to delays that small. Handing over every byte lets it be forwarded at once.
+            // This is a no-op on platforms without an rx full threshold, such as the ESP8266.
+            if (low_latency_rx_)
+            {
+                display_uart_component_->set_rx_full_threshold(1);
+                mainboard_uart_component_->set_rx_full_threshold(1);
+            }
         }
 
         void PhilipsCoffeeMachine::loop()
@@ -188,6 +198,7 @@ namespace esphome
         void PhilipsCoffeeMachine::dump_config()
         {
             ESP_LOGCONFIG(TAG, "Philips Coffee Machine");
+            ESP_LOGCONFIG(TAG, "  Low latency rx: %s", YESNO(low_latency_rx_));
             ESP_LOGCONFIG(TAG, "  Bridge stats: %s", YESNO(bridge_stats_));
             // The UART settings are checked when the configuration is validated (FINAL_VALIDATE_SCHEMA)
         }

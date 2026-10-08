@@ -39,6 +39,7 @@ namespace esphome
              */
             void register_display_uart(uart::UARTComponent *uart)
             {
+                display_uart_component_ = uart;
                 display_uart_ = uart::UARTDevice(uart);
             };
 
@@ -49,6 +50,7 @@ namespace esphome
              */
             void register_mainboard_uart(uart::UARTComponent *uart)
             {
+                mainboard_uart_component_ = uart;
                 mainboard_uart_ = uart::UARTDevice(uart);
             };
 
@@ -98,6 +100,16 @@ namespace esphome
             void set_bridge_stats(bool enabled)
             {
                 bridge_stats_ = enabled;
+            }
+
+            /**
+             * @brief Make both uarts hand over every received byte immediately (ESP32 only)
+             *
+             * @param enabled true to set the rx full threshold of both uarts to 1 byte
+             */
+            void set_low_latency_rx(bool enabled)
+            {
+                low_latency_rx_ = enabled;
             }
 
 #ifdef USE_SWITCH
@@ -189,6 +201,13 @@ namespace esphome
 
             /// @brief whether forwarding statistics are logged
             bool bridge_stats_ = false;
+
+            /// @brief whether both uarts are set to hand over every received byte immediately
+            bool low_latency_rx_ = true;
+
+            /// @brief uart components behind display_uart_ and mainboard_uart_, used to tune their receive settings
+            uart::UARTComponent *display_uart_component_ = nullptr;
+            uart::UARTComponent *mainboard_uart_component_ = nullptr;
 
             // Forwarding statistics, reset every BRIDGE_STATS_INTERVAL
             uint32_t stats_start_ = 0;

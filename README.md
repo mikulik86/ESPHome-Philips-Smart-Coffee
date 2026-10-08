@@ -36,6 +36,7 @@ A example configuration can be found [here](example.yaml)
 - **language**(**Optional**: int): Status sensor language. Select one of `en-US`, `de-DE`, `it-IT`, `hu-HU`. Defaults to `en-US`.
 - **model**(**Optional**: int): Different models or revisions may use different commands. This option can be used to specify the command set used by this component. Select one of `EP_2220`, `EP_2235`, `EP_3243`, `EP_3246`. Defaults to `EP_2220`.
 - **bridge_stats**(**Optional**: boolean): If set to `true`, logs every 10 seconds how quickly the traffic between display and mainboard is forwarded: the number of loops, the longest gap between two loops, the longest loop and the most bytes found waiting in either direction. Useful when the display reacts slowly. Defaults to `false`.
+- **low_latency_rx**(**Optional**: boolean): ESP32 only. Sets the `rx_full_threshold` of both UARTs to 1 byte, so every received byte is forwarded immediately. By default the ESP32 UART driver holds received bytes until a whole message has arrived, which delays each message on its way through the ESP and makes the display react noticeably slower than with an ESP8266 or a direct connection. This overrides any `rx_full_threshold` set on the two UARTs; set it to `false` to use your own. Has no effect on other platforms. Defaults to `true`.
 
 ## Philips Power switch
 
