@@ -17,6 +17,8 @@
 #endif
 
 #define POWER_STATE_TIMEOUT 500
+#define MAINBOARD_FRAME_SIZE size_t(19)
+#define BRIDGE_STATS_INTERVAL 10000
 
 namespace esphome
 {
@@ -88,6 +90,16 @@ namespace esphome
                 power_message_repetitions_ = count;
             }
 
+            /**
+             * @brief Periodically log how quickly the bus traffic is forwarded
+             *
+             * @param enabled true to log forwarding statistics every 10 seconds
+             */
+            void set_bridge_stats(bool enabled)
+            {
+                bridge_stats_ = enabled;
+            }
+
 #ifdef USE_SWITCH
             /**
              * @brief Reference to a power switch object.
@@ -145,11 +157,47 @@ namespace esphome
 #endif
 
         private:
+            /// @brief forwards everything the display has sent to the mainboard
+            void forward_display_to_mainboard_();
+
+            /// @brief forwards everything the mainboard has sent to the display and parses complete frames
+            void forward_mainboard_to_display_();
+
+            /// @brief adds one forwarded mainboard byte to the frame being assembled
+            void feed_mainboard_byte_(uint8_t byte);
+
+            /// @brief updates the status entities from a complete mainboard frame
+            void process_mainboard_frame_();
+
+            /// @brief logs and resets the forwarding statistics
+            void log_bridge_stats_();
+
             uint32_t last_message_from_mainboard_time_ = 0;
             uint32_t last_message_from_display_time_ = 0;
 
             /// @brief the last received mainboard message checksum; new messages are compared to this as a kind of pseudo-checksum
             uint8_t last_mainboard_message_checksum_[2] = {0x00};
+
+            /// @brief mainboard frame being assembled from the forwarded bytes, independent of how they were read
+            uint8_t mainboard_frame_[MAINBOARD_FRAME_SIZE] = {0x00};
+
+            /// @brief number of bytes in mainboard_frame_; 0 while waiting for a header
+            size_t mainboard_frame_length_ = 0;
+
+            /// @brief true while the display frame currently passing through is dropped for a long press
+            bool drop_display_frame_ = false;
+
+            /// @brief whether forwarding statistics are logged
+            bool bridge_stats_ = false;
+
+            // Forwarding statistics, reset every BRIDGE_STATS_INTERVAL
+            uint32_t stats_start_ = 0;
+            uint32_t stats_last_loop_ = 0;
+            uint32_t stats_loops_ = 0;
+            uint32_t stats_max_gap_ = 0;
+            uint32_t stats_max_loop_us_ = 0;
+            size_t stats_max_display_waiting_ = 0;
+            size_t stats_max_mainboard_waiting_ = 0;
 
             /// @brief reference to uart connected to the display unit
             uart::UARTDevice display_uart_;

@@ -35,6 +35,7 @@ A example configuration can be found [here](example.yaml)
 - **power_message_repetitions**(**Optional**: uint): Determines how many message repetitions are used while turning on the machine. On some hardware combinations a higher value such as `25` is required to turn on the display successfully. Defaults to `5`.
 - **language**(**Optional**: int): Status sensor language. Select one of `en-US`, `de-DE`, `it-IT`, `hu-HU`. Defaults to `en-US`.
 - **model**(**Optional**: int): Different models or revisions may use different commands. This option can be used to specify the command set used by this component. Select one of `EP_2220`, `EP_2235`, `EP_3243`, `EP_3246`. Defaults to `EP_2220`.
+- **bridge_stats**(**Optional**: boolean): If set to `true`, logs every 10 seconds how quickly the traffic between display and mainboard is forwarded: the number of loops, the longest gap between two loops, the longest loop and the most bytes found waiting in either direction. Useful when the display reacts slowly. Defaults to `false`.
 
 ## Philips Power switch
 

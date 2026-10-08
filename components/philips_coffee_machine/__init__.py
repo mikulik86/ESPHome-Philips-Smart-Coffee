@@ -13,6 +13,7 @@ CONTROLLER_ID = "controller_id"
 INVERT_POWER_PIN = "invert_power_pin"
 POWER_TRIP_DELAY = "power_trip_delay"
 CONF_POWER_MESSAGE_REPETITIONS = "power_message_repetitions"
+CONF_BRIDGE_STATS = "bridge_stats"
 
 CONF_COMMAND_SET = "model"
 COMMAND_SETS = {
@@ -56,6 +57,7 @@ CONFIG_SCHEMA = cv.Schema(
             COMMAND_SETS, upper=True, space="_"
         ),
         cv.Optional(CONF_LANGUAGE, default="en-US"): cv.enum(LANGUAGES, space="-"),
+        cv.Optional(CONF_BRIDGE_STATS, default=False): cv.boolean,
     }
 ).extend(cv.COMPONENT_SCHEMA)
 
@@ -78,3 +80,4 @@ def to_code(config):
     cg.add(var.set_power_message_repetitions(config[CONF_POWER_MESSAGE_REPETITIONS]))
     cg.add(var.set_invert_power_pin(config[INVERT_POWER_PIN]))
     cg.add(var.set_power_trip_delay(config[POWER_TRIP_DELAY]))
+    cg.add(var.set_bridge_stats(config[CONF_BRIDGE_STATS]))
