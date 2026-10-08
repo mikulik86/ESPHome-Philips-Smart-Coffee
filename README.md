@@ -46,9 +46,11 @@ A example configuration can be found [here](example.yaml)
 
 ## Action Button
 
+Buttons are pressed the way the display presses them: while a button is held, every message from the display is replaced by the button's message, so the mainboard sees the display's own timing. A regular press is held for 120 ms, a long press for 3.5 seconds, and consecutive presses (such as the beverage and play/pause of a `MAKE` action) are released for 100 ms in between. Presses therefore only work while the display is active; a press that cannot start within a second is dropped. Sending bursts of messages instead makes the mainboard treat the button as bouncing and lock it out for a while, including the physical button on the display. The beverage settings below press their buttons the same way.
+
 - **controller_id**(**Required**, string): The Philips Coffee Machine-Controller to which this entity belongs
 - **action**(**Required**, int): The action performed by this button. Select one of `SELECT_COFFEE`, `MAKE_COFFEE`, `SELECT_ESPRESSO`, `MAKE_ESPRESSO`, `SELECT_HOT_WATER`, `MAKE_HOT_WATER`, `SELECT_STEAM`, `MAKE_STEAM`, `SELECT_CAPPUCCINO`, `MAKE_CAPPUCCINO`, `SELECT_LATTE`, `MAKE_LATTE`, `SELECT_AMERICANO`, `MAKE_AMERICANO`, `BEAN`, `SIZE`, `MILK`, `AQUA_CLEAN`, `CALC_CLEAN`, `PLAY_PAUSE`. Note that some options are only available on select models.
-- **long_press**(**Optional**, boolean): If set to `true` this button will perform a long press. This option is only available for actions which don't include `MAKE`.
+- **long_press**(**Optional**, boolean): If set to `true` this button will perform a long press, holding the button for 3.5 seconds. This option is only available for actions which don't include `MAKE`.
 - All other options from [Button](https://esphome.io/components/button/index.html#config-button)
 
 ## Philips Status Sensor

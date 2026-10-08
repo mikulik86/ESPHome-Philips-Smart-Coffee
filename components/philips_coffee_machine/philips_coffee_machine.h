@@ -3,6 +3,7 @@
 #include "esphome/core/component.h"
 #include "esphome/components/uart/uart.h"
 #include "commands.h"
+#include "press_queue.h"
 #ifdef USE_SWITCH
 #include "switch/power.h"
 #endif
@@ -133,14 +134,13 @@ namespace esphome
 #ifdef USE_BUTTON
             /**
              * @brief Adds an action button to this controller.
-             * No reference is stored, but the correct uart references is passed along.
+             * No reference is stored, but the press queue is passed along.
              *
              * @param action_button Action button which will be added to this controller
              */
             void add_action_button(philips_action_button::ActionButton *action_button)
             {
-                action_button->set_uart_device(&mainboard_uart_);
-                action_buttons_.push_back(action_button);
+                action_button->set_press_queue(&press_queue_);
             }
 #endif
 
@@ -161,7 +161,7 @@ namespace esphome
              */
             void add_beverage_setting(philips_beverage_setting::BeverageSetting *beverage_setting)
             {
-                beverage_setting->set_uart_device(&mainboard_uart_);
+                beverage_setting->set_press_queue(&press_queue_);
                 beverage_settings_.push_back(beverage_setting);
             }
 
@@ -196,8 +196,11 @@ namespace esphome
             /// @brief number of bytes in mainboard_frame_; 0 while waiting for a header
             size_t mainboard_frame_length_ = 0;
 
-            /// @brief true while the display frame currently passing through is dropped for a long press
+            /// @brief true while the display frame currently passing through is replaced by an emulated button press
             bool drop_display_frame_ = false;
+
+            /// @brief button presses emulated by replacing the display's messages
+            PressQueue press_queue_;
 
             /// @brief whether forwarding statistics are logged
             bool bridge_stats_ = false;
@@ -249,11 +252,6 @@ namespace esphome
             /// @brief list of registered beverage settings
             std::vector<philips_beverage_setting::BeverageSetting *> beverage_settings_;
 #endif
-#endif
-
-#ifdef USE_BUTTON
-            /// @brief list of registered action buttons
-            std::vector<philips_action_button::ActionButton *> action_buttons_;
 #endif
         };
 

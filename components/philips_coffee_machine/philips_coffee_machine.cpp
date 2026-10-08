@@ -44,6 +44,9 @@ namespace esphome
                 stats_max_mainboard_waiting_ = std::max(stats_max_mainboard_waiting_, size_t(mainboard_uart_.available()));
             }
 
+            // Lets an emulated button press end or expire even while the display is silent
+            press_queue_.update(millis());
+
             // Forward bytes as soon as they are available instead of waiting for complete messages.
             // Everything that has arrived is passed on in this loop, so nothing queues up between loops.
             forward_display_to_mainboard_();
@@ -86,20 +89,8 @@ namespace esphome
             size_t available = display_uart_.available();
             if (available == 0)
                 return;
-            last_message_from_display_time_ = millis();
-
-            // Check if a action button is currently performing a long press
-            bool long_pressing = false;
-#ifdef USE_BUTTON
-            for (philips_action_button::ActionButton *button : action_buttons_)
-            {
-                if (button->is_long_pressing())
-                {
-                    long_pressing = true;
-                    break;
-                }
-            }
-#endif
+            uint32_t now = millis();
+            last_message_from_display_time_ = now;
 
             uint8_t buffer[FORWARD_CHUNK_SIZE];
             for (int chunk = 0; chunk < MAX_FORWARD_CHUNKS && available > 0; chunk++)
@@ -107,13 +98,25 @@ namespace esphome
                 size_t size = std::min(available, FORWARD_CHUNK_SIZE);
                 display_uart_.read_array(buffer, size);
 
-                // Drop whole display frames while an action button is injecting a long press.
-                // The decision is made at each frame header so frames are never cut in half.
+                // While a button press is emulated, every display frame is replaced by the button's message,
+                // which is what the display itself sends while a button is held. The decision is made at each
+                // frame header so frames are never cut in half.
                 size_t forward = 0;
                 for (size_t i = 0; i < size; i++)
                 {
                     if (buffer[i] == message_header[0])
-                        drop_display_frame_ = long_pressing;
+                    {
+                        const std::vector<uint8_t> *press = press_queue_.on_display_message(now);
+                        drop_display_frame_ = press != nullptr;
+                        if (press != nullptr)
+                        {
+                            // Bytes before this header go out first to keep the order
+                            if (forward > 0)
+                                mainboard_uart_.write_array(buffer, forward);
+                            forward = 0;
+                            mainboard_uart_.write_array(*press);
+                        }
+                    }
                     if (!drop_display_frame_)
                         buffer[forward++] = buffer[i];
                 }

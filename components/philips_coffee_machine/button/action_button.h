@@ -2,13 +2,8 @@
 
 #include "esphome/core/component.h"
 #include "esphome/components/button/button.h"
-#include "esphome/components/uart/uart.h"
 #include "../commands.h"
-
-#define MESSAGE_REPETITIONS 5
-#define BUTTON_SEQUENCE_DELAY 100
-#define LONG_PRESS_REPETITION_DELAY 50
-#define LONG_PRESS_DURATION 3500
+#include "../press_queue.h"
 
 namespace esphome
 {
@@ -46,14 +41,13 @@ namespace esphome
             };
 
             /**
-             * @brief Emulates (a) button press(es) using the mainboard uart.
+             * @brief Emulates (a) button press(es) the way the display makes them.
              *
              */
             class ActionButton : public button::Button, public Component
             {
             public:
                 void dump_config() override;
-                void loop() override;
 
                 /**
                  * @brief Set the action used by this ActionButton.
@@ -66,13 +60,13 @@ namespace esphome
                 };
 
                 /**
-                 * @brief Reference to uart which is connected to the mainboard
+                 * @brief Reference to the queue through which presses reach the mainboard
                  *
-                 * @param uart uart connected to mainboard
+                 * @param press_queue press queue of the controller
                  */
-                void set_uart_device(uart::UARTDevice *uart)
+                void set_press_queue(PressQueue *press_queue)
                 {
-                    mainboard_uart_ = uart;
+                    press_queue_ = press_queue;
                 };
 
                 /**
@@ -85,24 +79,7 @@ namespace esphome
                     should_long_press_ = long_press;
                 }
 
-                /**
-                 * @brief Determines if the button is currently performing a long press
-                 *
-                 * @return True if the button is currently performing a long press
-                 */
-                bool is_long_pressing()
-                {
-                    return is_long_pressing_;
-                }
-
             private:
-                /**
-                 * @brief Writes data MESSAGE_REPETITIONS times to the mainboard uart
-                 *
-                 * @param data Data to send
-                 */
-                void write_array(const std::vector<uint8_t> &data);
-
                 /**
                  * @brief Executes button press
                  *
@@ -110,23 +87,18 @@ namespace esphome
                 void press_action() override;
 
                 /**
-                 * @brief Writes the button to uart or initializes loop based message sending
+                 * @brief Queues the button press(es) for this action
                  *
+                 * @param duration how long the (first) button is held in ms
                  */
-                void perform_action();
+                void perform_action(uint32_t duration);
 
                 /// @brief Action used by this Button
                 Action action_;
-                /// @brief reference to uart connected to mainboard
-                uart::UARTDevice *mainboard_uart_;
-                /// @brief time in ms for how long the button should be pressed.
+                /// @brief queue through which presses reach the mainboard
+                PressQueue *press_queue_;
+                /// @brief true if the button should be held for LONG_PRESS_DURATION
                 bool should_long_press_ = false;
-                /// @brief true if the component is currently performing a long press
-                bool is_long_pressing_ = false;
-                /// @brief time at which the button press was started
-                uint32_t press_start_ = -(LONG_PRESS_DURATION + 1);
-                /// @brief time at which the last message was sent
-                uint32_t last_message_sent_ = 0;
             };
         } // namespace philips_action_button
     }     // namespace philips_coffee_machine

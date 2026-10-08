@@ -15,77 +15,40 @@ namespace esphome
                 LOG_BUTTON("", "Philips Action Button", this);
             }
 
-            void ActionButton::loop()
-            {
-                // Repeated message sending for long presses
-                if (should_long_press_ && millis() - press_start_ <= LONG_PRESS_DURATION)
-                {
-                    if (millis() - last_message_sent_ > LONG_PRESS_REPETITION_DELAY)
-                    {
-                        last_message_sent_ = millis();
-                        perform_action();
-                    }
-                    is_long_pressing_ = true;
-                }
-                else
-                {
-                    is_long_pressing_ = false;
-                }
-            }
-
-            void ActionButton::write_array(const std::vector<uint8_t> &data)
-            {
-                for (unsigned int i = 0; i <= MESSAGE_REPETITIONS; i++)
-                    mainboard_uart_->write_array(data);
-                mainboard_uart_->flush();
-            }
-
             void ActionButton::press_action()
             {
-                if (should_long_press_)
-                {
-                    // Reset button press start time
-                    press_start_ = millis();
-                    last_message_sent_ = 0;
-                }
-                else
-                {
-                    // Perform a single button press
-                    perform_action();
-                }
+                perform_action(should_long_press_ ? LONG_PRESS_DURATION : SHORT_PRESS_DURATION);
             }
 
-            void ActionButton::perform_action()
+            void ActionButton::perform_action(uint32_t duration)
             {
+                // Presses are queued and performed one after another, with the button released in between,
+                // so make actions press the beverage button and then play/pause like a person would.
                 auto action = action_;
                 // Coffee
                 if (action == SELECT_COFFEE || action == MAKE_COFFEE)
                 {
-                    write_array(command_press_1);
+                    press_queue_->add(command_press_1, duration);
                     if (action == SELECT_COFFEE)
                         return;
-
-                    delay(BUTTON_SEQUENCE_DELAY);
                     action = PLAY_PAUSE;
                 }
 
                 // Espresso
                 if (action == SELECT_ESPRESSO || action == MAKE_ESPRESSO)
                 {
-                    write_array(command_press_2);
+                    press_queue_->add(command_press_2, duration);
                     if (action == SELECT_ESPRESSO)
                         return;
-                    delay(BUTTON_SEQUENCE_DELAY);
                     action = PLAY_PAUSE;
                 }
 
                 // Hot water
                 if (action == SELECT_HOT_WATER || action == MAKE_HOT_WATER)
                 {
-                    write_array(command_press_3);
+                    press_queue_->add(command_press_3, duration);
                     if (action == SELECT_HOT_WATER)
                         return;
-                    delay(BUTTON_SEQUENCE_DELAY);
                     action = PLAY_PAUSE;
                 }
 
@@ -93,10 +56,9 @@ namespace esphome
                 // Steam
                 if (action == SELECT_STEAM || action == MAKE_STEAM)
                 {
-                    write_array(command_press_4);
+                    press_queue_->add(command_press_4, duration);
                     if (action == SELECT_STEAM)
                         return;
-                    delay(BUTTON_SEQUENCE_DELAY);
                     action = PLAY_PAUSE;
                 }
 #endif
@@ -104,10 +66,9 @@ namespace esphome
                 // Cappuccino
                 if (action == SELECT_CAPPUCCINO || action == MAKE_CAPPUCCINO)
                 {
-                    write_array(command_press_4);
+                    press_queue_->add(command_press_4, duration);
                     if (action == SELECT_CAPPUCCINO)
                         return;
-                    delay(BUTTON_SEQUENCE_DELAY);
                     action = PLAY_PAUSE;
                 }
 #endif
@@ -115,53 +76,50 @@ namespace esphome
                 // Latte
                 if (action == SELECT_LATTE || action == MAKE_LATTE)
                 {
-                    write_array(command_press_4);
+                    press_queue_->add(command_press_4, duration);
                     if (action == SELECT_LATTE)
                         return;
-                    delay(BUTTON_SEQUENCE_DELAY);
                     action = PLAY_PAUSE;
                 }
 
                 // Americano
                 if (action == SELECT_AMERICANO || action == MAKE_AMERICANO)
                 {
-                    write_array(command_press_5);
+                    press_queue_->add(command_press_5, duration);
                     if (action == SELECT_AMERICANO)
                         return;
-                    delay(BUTTON_SEQUENCE_DELAY);
                     action = PLAY_PAUSE;
                 }
 
                 // Cappuccino
                 if (action == SELECT_CAPPUCCINO || action == MAKE_CAPPUCCINO)
                 {
-                    write_array(command_press_6);
+                    press_queue_->add(command_press_6, duration);
                     if (action == SELECT_CAPPUCCINO)
                         return;
-                    delay(BUTTON_SEQUENCE_DELAY);
                     action = PLAY_PAUSE;
                 }
 #endif
                 // press/play or subsequent press/play
                 if (action == PLAY_PAUSE)
-                    write_array(command_press_play_pause);
+                    press_queue_->add(command_press_play_pause, duration);
                 else if (action == SELECT_BEAN)
                     // bean button
-                    write_array(command_press_bean);
+                    press_queue_->add(command_press_bean, duration);
                 else if (action == SELECT_SIZE)
                     // size button
-                    write_array(command_press_size);
+                    press_queue_->add(command_press_size, duration);
 #if defined(PHILIPS_EP3243)
                 else if (action == SELECT_MILK)
                     // milk button
-                    write_array(command_press_milk);
+                    press_queue_->add(command_press_milk, duration);
 #endif
                 else if (action == SELECT_AQUA_CLEAN)
                     // aqua clean button
-                    write_array(command_press_aqua_clean);
+                    press_queue_->add(command_press_aqua_clean, duration);
                 else if (action == SELECT_CALC_CLEAN)
                     // calc clean button
-                    write_array(command_press_calc_clean);
+                    press_queue_->add(command_press_calc_clean, duration);
                 else
                     ESP_LOGE(TAG, "Invalid Action provided!");
             }

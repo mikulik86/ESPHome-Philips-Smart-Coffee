@@ -2,11 +2,11 @@
 
 #include "esphome/core/component.h"
 #include "esphome/components/number/number.h"
-#include "esphome/components/uart/uart.h"
 #include "../text_sensor/status_sensor.h"
 #include "../commands.h"
+#include "../press_queue.h"
 
-#define MESSAGE_REPETITIONS 5
+// Time between two presses while stepping towards the target level, so the machine can show the new level
 #define SETTINGS_BUTTON_SEQUENCE_DELAY 500
 
 namespace esphome
@@ -83,13 +83,13 @@ namespace esphome
                 }
 
                 /**
-                 * @brief Reference to uart which is connected to the mainboard
+                 * @brief Reference to the queue through which presses reach the mainboard
                  *
-                 * @param uart uart connected to mainboard
+                 * @param press_queue press queue of the controller
                  */
-                void set_uart_device(uart::UARTDevice *uart)
+                void set_press_queue(PressQueue *press_queue)
                 {
-                    mainboard_uart_ = uart;
+                    press_queue_ = press_queue;
                 };
 
                 /**
@@ -121,8 +121,8 @@ namespace esphome
                 /// @brief Indicator for the sensors source value
                 Source source_;
 
-                /// @brief reference to uart connected to mainboard
-                uart::UARTDevice *mainboard_uart_;
+                /// @brief queue through which presses reach the mainboard
+                PressQueue *press_queue_;
 
                 /// @brief User selected target amount
                 int8_t target_amount_ = -1;

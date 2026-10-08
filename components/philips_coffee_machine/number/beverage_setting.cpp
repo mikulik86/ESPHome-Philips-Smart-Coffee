@@ -72,30 +72,27 @@ namespace esphome
                             break;
                         }
 
-                        // press the size/bean button until the target value has been reached
-                        if (target_amount_ != -1 && state != target_amount_ && millis() - last_transmission_ > SETTINGS_BUTTON_SEQUENCE_DELAY)
+                        // press the size/bean button until the target value has been reached,
+                        // one press at a time, waiting for the machine to show the new level in between
+                        if (target_amount_ != -1 && state != target_amount_ && !press_queue_->busy() && millis() - last_transmission_ > SETTINGS_BUTTON_SEQUENCE_DELAY)
                         {
-                            for (unsigned int i = 0; i <= MESSAGE_REPETITIONS; i++)
+                            switch (type_)
                             {
-                                switch (type_)
-                                {
-                                case BEAN:
-                                    mainboard_uart_->write_array(command_press_bean);
-                                    break;
-                                case SIZE:
-                                    mainboard_uart_->write_array(command_press_size);
-                                    break;
+                            case BEAN:
+                                press_queue_->add(command_press_bean, SHORT_PRESS_DURATION);
+                                break;
+                            case SIZE:
+                                press_queue_->add(command_press_size, SHORT_PRESS_DURATION);
+                                break;
 #ifdef PHILIPS_EP3243
-                                case MILK:
-                                    mainboard_uart_->write_array(command_press_milk);
-                                    break;
+                            case MILK:
+                                press_queue_->add(command_press_milk, SHORT_PRESS_DURATION);
+                                break;
 #endif
-                                default:
-                                    break;
-                                }
+                            default:
+                                break;
                             }
 
-                            mainboard_uart_->flush();
                             last_transmission_ = millis();
                         }
 
